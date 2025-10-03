@@ -3,30 +3,27 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import shap
-from shap import KernelExplainer  # 显式导入
 from torch import istft, stft
 
-from torch.utils.data import DataLoader
-from data_loader import load_data  # 复用你的数据加载函数
-from models.models import TransformerModel  # 复用你的Transformer模型
+from data_loader import load_data
+from models.models import TransformerModel
 import warnings
 from scipy.signal import stft, istft
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
-# -------------------------- 1. 定义STFTSHAPExplainer类（KernelExplainer适配版） --------------------------
 class STFTSHAPExplainer:
     def __init__(self, args, model, dataset):
         self.args = args
-        self.model = model.eval()  # 模型设为评估模式
+        self.model = model.eval()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.dataset = dataset  # 加载好的数据集（含原始时域数据）
-        # STFT参数（从args继承，与训练时一致）
+        self.dataset = dataset
+
         self.fs = args.fs
         self.nperseg = args.nperseg
         self.noverlap = args.noverlap
-        print(f"SHAP解释器初始化完成 | 设备: {self.device} | STFT参数: fs={self.fs}, nperseg={self.nperseg}")
+        print(f" 设备: {self.device} | STFT参数: fs={self.fs}, nperseg={self.nperseg}")
 
     def _get_stft(self, ts):
         """计算单个时域信号的STFT（返回频率轴、时间轴、振幅谱）"""
@@ -57,7 +54,8 @@ class STFTSHAPExplainer:
         )
         return xrec
 
-    def _prepare_background_and_test(self, target_label=1, num_bg=5, num_test=1):
+
+    def _prepare_background_and_test(self, target_label=0, num_bg=5, num_test=1):
         bg_specs = []
         test_specs = []
         test_specs_2d = []
@@ -174,7 +172,7 @@ class STFTSHAPExplainer:
 
             # 创建子图
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-            fig.suptitle(f"测试样本 {idx + 1} | 真实标签: {true_label}", fontsize=14, fontweight="bold")
+            fig.suptitle(f"sample {idx + 1} | label: {true_label}", fontsize=14, fontweight="bold")
 
             # 子图1：原始STFT时频图
             im1 = ax1.imshow(
@@ -183,15 +181,15 @@ class STFTSHAPExplainer:
                 aspect="auto",
                 cmap="viridis"
             )
-            ax1.set_xlabel("时间 [s]", fontsize=12)
-            ax1.set_ylabel("频率 [Hz]", fontsize=12)
-            ax1.set_title("原始STFT时频图（振幅谱）", fontsize=12)
+            ax1.set_xlabel("time [s]", fontsize=12)
+            ax1.set_ylabel("frequency [Hz]", fontsize=12)
+            ax1.set_title("original STFT time-frequency diagram（振幅谱）", fontsize=12)
             # 坐标轴刻度（适配你的数据维度）
             ax1.set_yticks(np.arange(0, num_freq, 2))
             ax1.set_yticklabels([f"{freq:.2f}" for freq in f[::2]])
             ax1.set_xticks(np.arange(0, num_time, 20))
             ax1.set_xticklabels([f"{time:.2f}" for time in t[::20]])
-            plt.colorbar(im1, ax=ax1, label="振幅（Amplitude）")
+            plt.colorbar(im1, ax=ax1, label="（Amplitude）")
 
             # 子图2：SHAP热力图（KernelExplainer结果）
             im2 = ax2.imshow(
@@ -200,21 +198,22 @@ class STFTSHAPExplainer:
                 aspect="auto",
                 cmap="bwr"  # 红=正贡献，蓝=负贡献
             )
-            ax2.set_xlabel("时间 [s]", fontsize=12)
-            ax2.set_ylabel("频率 [Hz]", fontsize=12)
-            ax2.set_title("SHAP热力图（KernelExplainer）", fontsize=12)
+            ax2.set_xlabel("time [s]", fontsize=12)
+            ax2.set_ylabel("frequency [Hz]", fontsize=12)
+            ax2.set_title("SHAP heatmap（KernelExplainer）", fontsize=12)
             # 与子图1共享刻度
             ax2.set_yticks(np.arange(0, num_freq, 2))
             ax2.set_yticklabels([f"{freq:.2f}" for freq in f[::2]])
             ax2.set_xticks(np.arange(0, num_time, 20))
             ax2.set_xticklabels([f"{time:.2f}" for time in t[::20]])
-            plt.colorbar(im2, ax=ax2, label="SHAP值（正=促进，负=抑制）")
+            plt.colorbar(im2, ax=ax2, label="SHAP value（正=促进，负=抑制）")
 
             # 保存与显示
             plt.tight_layout()
             save_dir = "shap_heatmaps_kernel"
             os.makedirs(save_dir, exist_ok=True)
-            save_path = os.path.join(save_dir, f"sample_{idx + 1}_label_{true_label}.png")
+            # 正确代码
+            save_path = os.path.join(save_dir, f"{args.dataset}_sample_{idx + 1}_label_{true_label}.png")
             plt.savefig(save_path, dpi=300, bbox_inches="tight")
             print(f"已保存热力图: {save_path}")
             plt.show()
@@ -246,9 +245,9 @@ if __name__ == "__main__":
     class Args:
         def __init__(self):
             # 模型与数据路径
-            self.classification_model = r"C:\Users\34517\Desktop\zuhui\Time_is_not_Enough-main\classification_models\cincecgtorso\transformer\transformer.pt"
-            self.dataset = "cincecgtorso"
-            self.num_classes = 4  # 4类分类任务
+            self.classification_model = r"C:\Users\34517\Desktop\zuhui\Time_is_not_Enough-main\classification_models\computer\transformer\transformer.pt"
+            self.dataset = "computer"
+            self.num_classes = 2  # 4类分类任务
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
             # Transformer结构参数（必须与训练一致）
@@ -257,7 +256,7 @@ if __name__ == "__main__":
             self.nhead = 8
             self.dim_feedforward = 256
             self.dropout = 0.2
-            self.timesteps = 1639  # cincecgtorso的时域长度
+            self.timesteps = 720  # cincecgtorso的时域长度
 
             # STFT参数（必须与data_loader一致）
             self.fs = 1
@@ -265,8 +264,8 @@ if __name__ == "__main__":
             self.noverlap = 8
 
             # KernelExplainer参数（可调整）
-            self.num_bg_samples = 5  # 背景样本数：KernelExplainer建议20-50（太多会变慢）
-            self.num_test_samples = 1  # 测试样本数：3个足够（多了计算时间翻倍）
+            self.num_bg_samples = 50  # 背景样本数：KernelExplainer建议20-50（太多会变慢）
+            self.num_test_samples = 3  # 测试样本数：3个足够（多了计算时间翻倍）
 
 
     # 初始化参数

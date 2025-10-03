@@ -80,7 +80,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="显示指定类别的5个随机样本的时频图")
 
     # 1. 数据集相关参数
-    parser.add_argument('--dataset', type=str, default='computer',
+    parser.add_argument('--dataset', type=str, default='cincecgtorso',
                         choices=['toydata_final', 'mixedshapes', 'yoga', 'forda', 'fordb',
                                  'strawberry', 'cincecgtorso', 'gunpointmalefemale', 'arrowhead', 'twopatterns'],
                         help='要加载的数据集名称')

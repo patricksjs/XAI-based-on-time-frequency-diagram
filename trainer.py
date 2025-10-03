@@ -150,16 +150,16 @@ class ClassifierTrainer():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--classification_model', type=str, default = r"C:\Users\34517\Desktop\zuhui\Time_is_not_Enough-main\classification_models\cincecgtorso\transformer\transformer.pt", help='trained classifier model for testing')
+    parser.add_argument('--classification_model', type=str, default = r"C:\Users\34517\Desktop\zuhui\Time_is_not_Enough-main\classification_models\computer\transformer\transformer.pt", help='trained classifier model for testing')
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--lr', type=float, default=2e-4)
     parser.add_argument('--n_epochs', type=int, default=200)
     parser.add_argument('--mode', type=str, default='test', choices=['test', 'train'])
-    parser.add_argument('--dataset', type=str, default='cincecgtorso', help="Dataset to train on")
+    parser.add_argument('--dataset', type=str, default='computer', help="Dataset to train on")
     parser.add_argument('--model_type', type=str, default="transformer", choices=['resnet', 'transformer', 'bilstm'])
     parser.add_argument('--savedir', type=str, default="classification_models")
     parser.add_argument('--inplanes', type=int, default=64)
-    parser.add_argument('--num_classes', type=int, default=4)
+    parser.add_argument('--num_classes', type=int, default=2)
     parser.add_argument('--task', type=str, default='classification', choices = ['spectralx', 'classification'])
     parser.add_argument('--topk', type=int, default=10)
 
